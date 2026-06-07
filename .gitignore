@@ -1,3 +1,6 @@
+# Impeccable tool artifacts (critique snapshots, etc.)
+.impeccable/
+
 # OS / editor cruft
 .DS_Store
 Thumbs.db
