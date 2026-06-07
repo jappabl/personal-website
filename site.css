@@ -45,22 +45,11 @@ body {
 a { color: inherit; text-decoration: none; }
 ::selection { background: var(--signal); color: #fff; }
 
-/* blueprint grid — fixed, whole page */
-.gridbg {
+/* canvas backdrop — fixed, whole page. Faint contour texture. */
+.bgcanvas {
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  background-image:
-    linear-gradient(var(--line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--line) 1px, transparent 1px);
-  background-size: var(--grid) var(--grid);
-  /* heavier major lines every 5 cells */
-}
-.gridbg::after {
-  content: ""; position: absolute; inset: 0;
-  background-image:
-    linear-gradient(var(--line-2) 1px, transparent 1px),
-    linear-gradient(90deg, var(--line-2) 1px, transparent 1px);
-  background-size: calc(var(--grid) * 5) calc(var(--grid) * 5);
-  opacity: .5;
+  width: 100%; height: 100%;
+  opacity: .85;
 }
 
 /* ---------- fixed chrome ---------- */
@@ -100,6 +89,9 @@ a { color: inherit; text-decoration: none; }
 
 /* ---------- layout shell ---------- */
 .shell { position: relative; z-index: 1; max-width: var(--maxw); margin: 0 auto; padding: 0 var(--pad); }
+/* white halo behind content text — knocks the contour lines back where text sits */
+.shell, .titleblock { text-shadow: 0 0 7px #fff, 0 0 14px #fff, 0 0 14px #fff; }
+.shell .chip, .shell .btn { text-shadow: none; }
 .section { position: relative; padding: clamp(64px, 12vh, 130px) 0; border-bottom: 1px dashed var(--line-2); }
 .section:last-of-type { border-bottom: 0; }
 
@@ -275,9 +267,7 @@ a { color: inherit; text-decoration: none; }
 
 /* ---------- easter egg: assembly mode ---------- */
 body.assembly .section { transition: transform .6s var(--ease); }
-body.assembly .gridbg { background-image:
-  linear-gradient(var(--signal-bg) 1px, transparent 1px),
-  linear-gradient(90deg, var(--signal-bg) 1px, transparent 1px); }
+body.assembly .bgcanvas { filter: hue-rotate(-12deg) saturate(1.4); opacity: .9; }
 .stamp { position: fixed; z-index: 80; top: 50%; left: 50%; transform: translate(-50%,-50%) rotate(-12deg) scale(.6);
   border: 3px solid var(--signal); color: var(--signal); font-family: var(--grotesk); font-weight: 700; text-transform: uppercase;
   letter-spacing: .04em; font-size: clamp(28px, 6vw, 64px); padding: 10px 26px; border-radius: 6px; opacity: 0;
@@ -286,7 +276,7 @@ body.assembly .gridbg { background-image:
 
 /* print: clean CV */
 @media print {
-  .gridbg, .crop, .crosshair, .statusbar, .console, .scrollcue, .navledger, .stamp { display: none !important; }
+  .bgcanvas, .crop, .crosshair, .statusbar, .console, .scrollcue, .navledger, .stamp { display: none !important; }
   body { font-size: 11pt; }
   .section { padding: 18px 0; border-bottom: 1px solid #ccc; }
 }

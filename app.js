@@ -138,6 +138,7 @@
       out('  <span class="ok">goto</span> &lt;a1-a4&gt; jump to a sheet');
       out('  <span class="ok">ls</span>         list sheets');
       out('  <span class="ok">cv</span>         print / save the resume');
+      out('  <span class="ok">bg</span> &lt;style&gt;  backdrop: contour · dots · grid');
       out('  <span class="ok">clear</span>      wipe the console');
       out('  <span class="ok">play</span>       ▦ boot the hidden game');
     },
@@ -166,6 +167,11 @@
     },
     play() { startGame(); },
     art(arg) { printArt(arg); },
+    bg(arg) {
+      const m = (arg || '').toLowerCase().trim();
+      if (window.setBackground && window.setBackground(m)) out('<span class="dim">backdrop →</span> <span class="ok">' + m + '</span>');
+      else out('<span class="dim">usage:</span> <span class="ok">bg contour</span> · <span class="ok">bg dots</span> · <span class="ok">bg grid</span>');
+    },
     sudo() { out('<span class="dim">permission denied. this is a portfolio, not a kernel.</span>'); },
     assembly() { toggleAssembly(true); out('<span class="ok">assembly mode engaged.</span> <span class="dim">(or press ↑↑↓↓←→←→ b a)</span>'); },
   };
