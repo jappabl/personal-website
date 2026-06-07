@@ -48,18 +48,29 @@
     setTimeout(() => rv.forEach((e) => e.classList.remove('pending')), 1800);
   }
 
-  /* ---------- project rows expand/collapse ---------- */
-  $$('.part').forEach((part) => {
+  /* ---------- project rows expand/collapse (keyboard + SR accessible) ---------- */
+  $$('.part').forEach((part, idx) => {
     const row = $('.row', part), detail = $('.detail', part), inner = $('.inner', part);
-    row.addEventListener('click', () => {
+    const did = 'part-detail-' + (idx + 1);
+    detail.id = did;
+    row.setAttribute('role', 'button');
+    row.setAttribute('tabindex', '0');
+    row.setAttribute('aria-controls', did);
+    row.setAttribute('aria-expanded', 'false');
+    function toggle() {
       const open = part.classList.toggle('open');
+      row.setAttribute('aria-expanded', open ? 'true' : 'false');
       if (open) {
-        $$('.part.open').forEach((p) => { if (p !== part) { p.classList.remove('open'); $('.detail', p).style.height = '0px'; } });
+        $$('.part.open').forEach((p) => {
+          if (p !== part) { p.classList.remove('open'); $('.detail', p).style.height = '0px'; $('.row', p).setAttribute('aria-expanded', 'false'); }
+        });
         detail.style.height = inner.offsetHeight + 'px';
       } else {
         detail.style.height = '0px';
       }
-    });
+    }
+    row.addEventListener('click', toggle);
+    row.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
   });
   window.addEventListener('resize', () => {
     const open = $('.part.open');
@@ -93,10 +104,16 @@
   }
   function setMin(min) {
     con.classList.toggle('min', min);
+    conBar.setAttribute('aria-expanded', String(!min));
     conHint.textContent = min ? 'click to open · type help' : 'esc to close';
     if (!min) setTimeout(() => conInput.focus(), 300);
   }
+  conBar.setAttribute('role', 'button');
+  conBar.setAttribute('tabindex', '0');
+  conBar.setAttribute('aria-controls', 'consoleBody');
+  conBar.setAttribute('aria-expanded', 'false');
   conBar.addEventListener('click', () => setMin(!con.classList.contains('min')));
+  conBar.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setMin(!con.classList.contains('min')); } });
 
   const SECTIONS = { a1: 'projects', a2: 'resume', a3: 'about', a4: 'contact',
     projects: 'projects', resume: 'resume', about: 'about', contact: 'contact', cover: 'cover', top: 'cover' };
@@ -143,17 +160,17 @@
       out('  <span class="ok">play</span>       ▦ boot the hidden game');
     },
     whoami() {
-      out('<span class="wt">hao lin</span> — founder @ <span class="ok">tolus.dev</span>, isef researcher.');
+      out('<span class="wt">hao lin</span> · founder @ <span class="ok">tolus.dev</span>, isef researcher.');
       out('<span class="dim">toronto. builds real-time systems, dev tools, and tolus.</span>');
     },
     projects() { PROJECTS.forEach((p) => out('<span class="dim">' + p[0] + '</span>  <span class="ok">' + p[1] + '</span> <span class="dim">(' + p[2] + ')</span>  ' + p[3])); },
     resume() {
-      out('<span class="ok">2024—now</span>  Founder · Tolus');
-      out('<span class="ok">2023—24 </span>  Software Engineer · Example Labs');
-      out('<span class="ok">2022—23 </span>  Research Assistant · ISEF');
+      out('<span class="ok">2024–now</span>  Founder · Tolus');
+      out('<span class="ok">2023–24 </span>  Software Engineer · Example Labs');
+      out('<span class="ok">2022–23 </span>  Research Assistant · ISEF');
       out('<span class="dim">type</span> <span class="ok">cv</span> <span class="dim">to save the full pdf.</span>');
     },
-    about() { out('developer at the seam where engineering meets craft. likes the whole stack — db query to animation curve. learns by building, then rebuilding.'); },
+    about() { out('developer at the seam where engineering meets craft. likes the whole stack, db query to animation curve. learns by building, then rebuilding.'); },
     contact() { out('email <span class="ok">hao@tolus.dev</span> · github <span class="ok">github.com/jappabl</span>'); },
     ls() { out('cover/  <span class="ok">projects/</span>  resume/  about/  contact/  <span class="dim">.assembly/</span>'); },
     cv() { out('<span class="dim">opening print dialog…</span>'); setTimeout(() => window.print(), 350); },
