@@ -1,0 +1,208 @@
+/* ============================================================
+   Landing — dark editorial luxe
+   ============================================================ */
+.landing {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 120% at 70% 30%, oklch(22% 0.02 60) 0%, var(--bg) 55%);
+  z-index: var(--z-content);
+}
+
+/* WebGL flow field sits behind everything */
+.inkfield {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-bg);
+}
+
+.landing__inner {
+  position: relative;
+  z-index: var(--z-content);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(24px, 5vw, 72px);
+}
+
+/* ---- top bar ---- */
+.landing__top {
+  position: absolute;
+  inset: clamp(22px, 4vw, 40px) clamp(24px, 5vw, 72px) auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-body);
+  font-size: var(--step--1);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+.landing__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--ink-faint);
+}
+.landing__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+
+/* ---- hero ---- */
+.landing__hero {
+  max-width: min(680px, 100%);
+}
+.landing__tagline {
+  font-family: var(--font-body);
+  font-size: var(--step--1);
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-bottom: clamp(10px, 1.5vw, 18px);
+}
+.landing__name {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: var(--step-4);
+  line-height: 0.98;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  margin: 0 0 clamp(28px, 5vh, 56px);
+}
+
+/* ---- nav (editorial numbered list) ---- */
+.landing__nav {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--line);
+}
+.nav-row {
+  display: grid;
+  grid-template-columns: 2.4rem 1fr auto;
+  align-items: baseline;
+  gap: clamp(14px, 3vw, 30px);
+  padding: clamp(14px, 1.8vw, 20px) 4px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  text-decoration: none;
+  position: relative;
+}
+/* ember tick that slides in on hover/focus */
+.nav-row::before {
+  content: '';
+  position: absolute;
+  left: -16px;
+  top: 50%;
+  width: 8px;
+  height: 1px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.4s var(--ease-out-quart);
+}
+.nav-row:hover::before,
+.nav-row:focus-visible::before {
+  transform: scaleX(1);
+}
+.nav-row__index {
+  font-family: var(--font-body);
+  font-size: var(--step--1);
+  letter-spacing: 0.16em;
+  color: var(--ink-faint);
+  transition: color 0.3s var(--ease-out-quart);
+}
+.nav-row__label {
+  font-family: var(--font-display);
+  font-size: var(--step-2);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  transition:
+    color 0.3s var(--ease-out-quart),
+    transform 0.4s var(--ease-out-quart);
+}
+.nav-row__end {
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(12px, 2vw, 24px);
+  justify-self: end;
+}
+.nav-row__meta {
+  font-family: var(--font-body);
+  font-size: var(--step--1);
+  letter-spacing: 0.02em;
+  color: var(--ink-faint);
+  transition: color 0.3s var(--ease-out-quart);
+}
+.nav-row__arrow {
+  color: var(--ink-faint);
+  display: inline-flex;
+  transition:
+    color 0.3s var(--ease-out-quart),
+    transform 0.4s var(--ease-out-quart);
+}
+.nav-row:hover .nav-row__label,
+.nav-row:focus-visible .nav-row__label {
+  color: var(--accent);
+  transform: translateX(10px);
+}
+.nav-row:hover .nav-row__index,
+.nav-row:hover .nav-row__meta,
+.nav-row:focus-visible .nav-row__index,
+.nav-row:focus-visible .nav-row__meta {
+  color: var(--ink-muted);
+}
+.nav-row:hover .nav-row__arrow,
+.nav-row:focus-visible .nav-row__arrow {
+  color: var(--accent);
+  transform: translate(4px, -4px);
+}
+.nav-row:focus-visible {
+  outline: none;
+}
+
+/* ---- entrance (always runs on mount; reduced-motion neutralizes it) ---- */
+.landing__tagline,
+.landing__name,
+.nav-row {
+  animation: rise 0.85s var(--ease-out-expo) both;
+}
+.landing__name {
+  animation-delay: 0.06s;
+}
+.nav-row {
+  animation-delay: calc(0.16s + var(--i, 0) * 0.06s);
+}
+.nav-row:nth-child(1) {
+  --i: 0;
+}
+.nav-row:nth-child(2) {
+  --i: 1;
+}
+.nav-row:nth-child(3) {
+  --i: 2;
+}
+.nav-row:nth-child(4) {
+  --i: 3;
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+@media (max-width: 560px) {
+  .nav-row {
+    grid-template-columns: 1.8rem 1fr auto;
+  }
+  .nav-row__meta {
+    display: none;
+  }
+}
