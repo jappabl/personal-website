@@ -1,25 +1,194 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="color-scheme" content="dark" />
-    <meta name="theme-color" content="#16120d" />
-    <title>Hao Lin — Developer &amp; Creator</title>
-    <meta
-      name="description"
-      content="Hao Lin, developer and creator. Selected work, background, and how to get in touch."
-    />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400..900&family=Hanken+Grotesk:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hao Lin — Founder & Researcher</title>
+<meta name="description" content="Hao Lin — founder of tolus.dev, ISEF researcher. Selected work, experience, and contact." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="site.css?v=4" />
+</head>
+<body>
+
+<div class="gridbg"></div>
+<span class="crop tl"></span><span class="crop tr"></span><span class="crop bl"></span><span class="crop br"></span>
+
+<div class="stamp" id="stamp">Assembly mode</div>
+
+<!-- ===================== STATUS BAR ===================== -->
+<div class="statusbar">
+  <span class="brand">HAO<span class="reg">·</span>LIN</span>
+  <span class="seg hide-sm sheet" id="sheetLabel">SHEET 1/4 · COVER</span>
+  <span class="seg hide-sm">REV. 2026.06</span>
+  <span class="readout" id="readout">Y<b id="ry">0000</b> · <span id="rscroll">00%</span></span>
+</div>
+
+<main class="shell">
+
+  <!-- ===================== HERO ===================== -->
+  <section class="hero" id="cover" data-screen-label="Cover" data-sheet="1/4 · COVER">
+    <div class="kicker rv">
+      <span>FOUNDER / RESEARCHER</span>
+      <span>TORONTO · 2026</span>
+      <span class="live"><i></i>OPEN TO BUILD</span>
+    </div>
+    <h1 class="rv">HAO<span class="reg">·</span>LIN</h1>
+    <p class="lede rv">Founder of <b>tolus.dev</b>. ISEF researcher. I build software that's correct and a pleasure to touch.</p>
+
+    <nav class="navledger rv" aria-label="Sections">
+      <a href="#projects" data-goto="projects"><span class="id">A1</span><span class="nm">Projects</span><span class="ds">selected work · x:04</span><span class="ar">→</span></a>
+      <a href="#resume" data-goto="resume"><span class="id">A2</span><span class="nm">Resume</span><span class="ds">experience · cv.pdf</span><span class="ar">→</span></a>
+      <a href="#about" data-goto="about"><span class="id">A3</span><span class="nm">About</span><span class="ds">profile · fig.1</span><span class="ar">→</span></a>
+      <a href="#contact" data-goto="contact"><span class="id">A4</span><span class="nm">Contact</span><span class="ds">channels · @</span><span class="ar">→</span></a>
+    </nav>
+
+    <div class="scrollcue"><span class="ln"></span>SCROLL TO READ THE DRAWING</div>
+  </section>
+
+  <!-- ===================== A1 · PROJECTS ===================== -->
+  <section class="section" id="projects" data-screen-label="Projects" data-sheet="2/4 · PROJECTS">
+    <header class="sec-head rv">
+      <span class="coord">A1</span>
+      <h2 class="ttl">Projects</h2>
+      <div class="meta"><span>SELECTED WORK</span><span>04 PARTS</span><span class="reg" style="color:var(--signal)">CLICK A ROW TO EXPAND</span></div>
+    </header>
+
+    <div class="parts" id="parts">
+      <article class="part rv">
+        <div class="row"><span class="pn">P‑01</span><span class="nm">Latticework</span><span class="sum">Real‑time collaborative graph editor</span><span class="yr">2025<span class="tog">+</span></span></div>
+        <div class="detail"><div class="inner"><div class="spacer"></div><div>
+          <p class="body">Real‑time collaborative graph editor. Conflict‑free edits over CRDTs; a 60fps canvas at 50k nodes.</p>
+          <div class="chips"><span class="chip">TypeScript</span><span class="chip">WebGL</span><span class="chip">CRDT</span><span class="chip">Rust / WASM</span></div>
+          <div class="open-link"><a class="btn ghost" href="https://github.com/jappabl" target="_blank" rel="noopener">Open repository →</a></div>
+        </div></div></div>
+      </article>
+
+      <article class="part rv">
+        <div class="row"><span class="pn">P‑02</span><span class="nm">Halfstep</span><span class="sum">Ear‑training app that listens</span><span class="yr">2024<span class="tog">+</span></span></div>
+        <div class="detail"><div class="inner"><div class="spacer"></div><div>
+          <p class="body">Browser ear‑training that listens back. Real‑time pitch detection, adaptive drills, no account.</p>
+          <div class="chips"><span class="chip">Web Audio</span><span class="chip">React</span><span class="chip">DSP</span></div>
+          <div class="open-link"><a class="btn ghost" href="https://github.com/jappabl" target="_blank" rel="noopener">Open repository →</a></div>
+        </div></div></div>
+      </article>
+
+      <article class="part rv">
+        <div class="row"><span class="pn">P‑03</span><span class="nm">Drift</span><span class="sum">Self‑hosted read‑later service</span><span class="yr">2024<span class="tog">+</span></span></div>
+        <div class="detail"><div class="inner"><div class="spacer"></div><div>
+          <p class="body">Self‑hosted read‑later. Full‑text search, a clean reader, runs on a $5 box.</p>
+          <div class="chips"><span class="chip">Go</span><span class="chip">SQLite</span><span class="chip">Full‑text search</span></div>
+          <div class="open-link"><a class="btn ghost" href="https://github.com/jappabl" target="_blank" rel="noopener">Open repository →</a></div>
+        </div></div></div>
+      </article>
+
+      <article class="part rv">
+        <div class="row"><span class="pn">P‑04</span><span class="nm">Plumb</span><span class="sum">Monorepo dependency‑graph visualizer</span><span class="yr">2023<span class="tog">+</span></span></div>
+        <div class="detail"><div class="inner"><div class="spacer"></div><div>
+          <p class="body">Dependency‑graph visualizer for monorepos. Drop it in CI; see what actually changed.</p>
+          <div class="chips"><span class="chip">Node</span><span class="chip">D3</span><span class="chip">CLI</span></div>
+          <div class="open-link"><a class="btn ghost" href="https://github.com/jappabl" target="_blank" rel="noopener">Open repository →</a></div>
+        </div></div></div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ===================== A2 · RESUME ===================== -->
+  <section class="section" id="resume" data-screen-label="Resume" data-sheet="3/4 · RESUME">
+    <header class="sec-head rv">
+      <span class="coord">A2</span>
+      <h2 class="ttl">Resume</h2>
+      <div class="meta"><span>EXPERIENCE &amp; EDUCATION</span><span>BILL OF MATERIALS</span></div>
+    </header>
+
+    <div class="cv-block-label rv"><span class="l">Experience</span><span class="rule"></span></div>
+    <div class="cv">
+      <div class="cv-row rv"><span class="period">2024 — Now</span><div><div class="role">Founder</div><div class="org">Tolus — tolus.dev</div><div class="what">An oral‑defense layer that scores whether students understand their work. Research, product, engineering — end to end.</div></div><span class="tagcol">Product · ML · Full‑stack</span></div>
+      <div class="cv-row rv"><span class="period">2023 — 2024</span><div><div class="role">Software Engineer</div><div class="org">Example Labs</div><div class="what">Real‑time collaboration team. Cut sync latency 60%; shipped editor features used daily by tens of thousands.</div></div><span class="tagcol">Real‑time · TypeScript</span></div>
+      <div class="cv-row rv"><span class="period">2022 — 2023</span><div><div class="role">Research Assistant</div><div class="org">Independent / ISEF</div><div class="what">Independent research, owned end to end, through to ISEF.</div></div><span class="tagcol">Research · Systems</span></div>
+    </div>
+
+    <div class="cv-block-label rv"><span class="l">Education</span><span class="rule"></span></div>
+    <div class="cv">
+      <div class="cv-row rv"><span class="period">2021 — 2025</span><div><div class="role">Studies in Computer Science</div><div class="org">Toronto, Canada</div><div class="what">Distributed systems and HCI. Learn by building, then rebuilding.</div></div><span class="tagcol">CS · HCI</span></div>
+    </div>
+
+    <div class="cv-actions rv">
+      <a class="btn" href="#" id="cvDownload">Download CV (PDF)</a>
+      <a class="btn ghost" href="https://github.com/jappabl" target="_blank" rel="noopener">github.com/jappabl →</a>
+    </div>
+  </section>
+
+  <!-- ===================== A3 · ABOUT ===================== -->
+  <section class="section" id="about" data-screen-label="About" data-sheet="3/4 · ABOUT">
+    <header class="sec-head rv">
+      <span class="coord">A3</span>
+      <h2 class="ttl">About</h2>
+      <div class="meta"><span>PROFILE</span><span>FIG. 1</span></div>
+    </header>
+
+    <div class="about">
+      <div class="rv">
+        <p class="lede">I care about the seam where engineering meets craft — where a thing is both correct and a pleasure to touch.</p>
+        <p>I like the whole stack: the database query, the API boundary, the animation curve. Lately, interfaces that behave like physical objects and real‑time systems.</p>
+        <p>Most of that goes into Tolus now. I build, then rebuild once I see what I got wrong.</p>
+      </div>
+
+      <aside class="rv">
+        <div class="facts">
+          <div class="f"><span class="k">Based in</span><span class="v">Toronto, Canada</span></div>
+          <div class="f"><span class="k">Focus</span><span class="v">Real‑time · dev tools · ML</span></div>
+          <div class="f"><span class="k">Currently</span><span class="v">Building Tolus</span></div>
+          <div class="f"><span class="k">Off the clock</span><span class="v">Badminton · synths · walks</span></div>
+        </div>
+        <div class="skills">
+          <div class="grp"><div class="gk">Languages</div><div class="items"><span class="chip">TypeScript</span><span class="chip">Go</span><span class="chip">Rust</span><span class="chip">Python</span><span class="chip">SQL</span></div></div>
+          <div class="grp"><div class="gk">Frontend</div><div class="items"><span class="chip">React</span><span class="chip">Canvas / WebGL</span><span class="chip">CSS</span><span class="chip">Motion</span></div></div>
+          <div class="grp"><div class="gk">Backend</div><div class="items"><span class="chip">Node</span><span class="chip">Postgres</span><span class="chip">Redis</span><span class="chip">gRPC</span></div></div>
+          <div class="grp"><div class="gk">Tooling</div><div class="items"><span class="chip">Vite</span><span class="chip">Docker</span><span class="chip">CI/CD</span><span class="chip">Linux</span></div></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ===================== A4 · CONTACT ===================== -->
+  <section class="section" id="contact" data-screen-label="Contact" data-sheet="4/4 · CONTACT">
+    <header class="sec-head rv">
+      <span class="coord">A4</span>
+      <h2 class="ttl">Contact</h2>
+      <div class="meta"><span>CHANNELS</span><span>HAVE SOMETHING TO BUILD?</span></div>
+    </header>
+
+    <div class="contact">
+      <a class="big-mail rv" href="mailto:hao@tolus.dev">hao@tolus.dev</a>
+      <div class="channels rv">
+        <a href="mailto:hao@tolus.dev"><span class="id">C1</span><span class="lb">Email</span><span class="vl">hao@tolus.dev</span><span class="ar">→</span></a>
+        <a href="https://github.com/jappabl" target="_blank" rel="noopener"><span class="id">C2</span><span class="lb">GitHub</span><span class="vl">github.com/jappabl</span><span class="ar">→</span></a>
+        <a href="https://linkedin.com/" target="_blank" rel="noopener"><span class="id">C3</span><span class="lb">LinkedIn</span><span class="vl">in/haolin</span><span class="ar">→</span></a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ===================== TITLE BLOCK ===================== -->
+<footer class="titleblock">
+  <div class="tb">
+    <div class="cell"><div class="k">Drawing</div><div class="v big">HAO<span class="reg">·</span>LIN — PERSONAL SITE</div></div>
+    <div class="cell"><div class="k">Sheets</div><div class="v">04 · A1–A4</div></div>
+    <div class="cell"><div class="k">Rev</div><div class="v">2026.06 · <span class="reg">v1</span></div></div>
+  </div>
+</footer>
+
+<!-- ===================== CONSOLE ===================== -->
+<div class="console min" id="console">
+  <div class="bar" id="consoleBar"><span class="dot"></span><span class="t">Console</span><span class="hint" id="consoleHint">click to open · type help</span></div>
+  <div class="body" id="consoleBody">
+    <div class="line"><span class="dim">haolin.dev — console · v1. type</span> <span class="ok">help</span> <span class="dim">for commands.</span></div>
+  </div>
+  <div class="inputrow"><span class="pr">›</span><input id="consoleInput" autocomplete="off" spellcheck="false" aria-label="console input" placeholder="help · projects · goto a3 · play" /></div>
+</div>
+
+<script src="app.js?v=3"></script>
+</body>
 </html>

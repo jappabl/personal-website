@@ -1,40 +1,37 @@
-# Hao Lin — personal website
+# Hao Lin — personal site
 
-A dark, editorial developer portfolio. A deep warm near-black canvas, a high-contrast serif
-name, a slow generative "ink" light field behind it, one warm ember accent, and a refined
-numbered nav. Sleek and considered rather than playful.
+A static personal site in a **"Schematic"** blueprint / technical-drawing style: stark grid,
+Space Grotesk × JetBrains Mono, a registration-red signal accent, and A1–A4 "sheet" sections
+(Projects, Resume, About, Contact). Built from a Claude Design handoff.
 
-## Stack
+No build step — it's plain HTML/CSS/JS.
 
-- React 19 + TypeScript + Vite
-- [ogl](https://github.com/oframe/ogl) — the landing's generative WebGL "ink" field
-- [motion](https://motion.dev/) (Framer Motion) — the unified section transition + entrances
-- Fonts: Bodoni Moda (display) + Hanken Grotesk (body), via Google Fonts
+## Files
 
-## Develop
+- `index.html` — the page (all four sections + the title block)
+- `site.css` — the full Schematic design system
+- `app.js` — interactions: scroll readout + active sheet, project expand/collapse, the console, and the easter eggs
+
+Fonts load from Google Fonts; everything else is self-contained.
+
+## Run / deploy
+
+Open `index.html` directly, or serve the folder with any static server:
 
 ```bash
-npm install
-npm run dev      # Vite dev server
-npm run build    # tsc -b && vite build
-npm run preview  # serve the production build
-npm run lint
+python3 -m http.server 8000   # then open http://localhost:8000
 ```
+
+Deploy by uploading these files to any static host (GitHub Pages, Netlify, Vercel, …).
+
+## The console
+
+Click the panel docked bottom-right, then type. Commands: `help`, `whoami`, `projects`,
+`resume`, `about`, `contact`, `goto a1`–`a4` (scrolls), `ls`, `cv`, `clear`, `play` (Snake),
+and a hidden `art` (ASCII art). Easter egg: the Konami code (`↑ ↑ ↓ ↓ ← → ← → B A`) flips the
+site into *assembly mode*.
 
 ## Editing content
 
-All copy lives in `src/content/` — one file per section plus `site.ts` (name, tagline,
-status). Swap your real projects, bio, resume, and links there; no component changes needed.
-
-## Design system
-
-See `DESIGN.md` for tokens (OKLCH dark palette + ember accent), typography, the landing ink
-field, the unified wipe transition, and accessibility commitments. `PRODUCT.md` covers the
-audience and design principles.
-
-## Accessibility
-
-WCAG AA (measured AAA for most text on the dark canvas). The ink field is decorative over a
-real `<nav>`; everything is keyboard-operable with a visible ember focus ring, and
-`prefers-reduced-motion` swaps the field for a static gradient and the transitions for quick
-crossfades.
+All copy lives directly in `index.html` (projects, resume rows, about facts/skills, contact
+channels). Update the email, links (`github.com/jappabl`), and project details there.
