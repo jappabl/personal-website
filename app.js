@@ -53,6 +53,7 @@
     const row = $('.row', part), detail = $('.detail', part), inner = $('.inner', part);
     const did = 'part-detail-' + (idx + 1);
     detail.id = did;
+    detail.inert = true; // collapsed: out of the tab order until opened
     row.setAttribute('role', 'button');
     row.setAttribute('tabindex', '0');
     row.setAttribute('aria-controls', did);
@@ -60,9 +61,14 @@
     function toggle() {
       const open = part.classList.toggle('open');
       row.setAttribute('aria-expanded', open ? 'true' : 'false');
+      detail.inert = !open;
       if (open) {
         $$('.part.open').forEach((p) => {
-          if (p !== part) { p.classList.remove('open'); $('.detail', p).style.height = '0px'; $('.row', p).setAttribute('aria-expanded', 'false'); }
+          if (p !== part) {
+            p.classList.remove('open');
+            const d = $('.detail', p); d.style.height = '0px'; d.inert = true;
+            $('.row', p).setAttribute('aria-expanded', 'false');
+          }
         });
         detail.style.height = inner.offsetHeight + 'px';
       } else {
@@ -92,7 +98,7 @@
      CONSOLE
      ============================================================ */
   const con = $('#console'), conBar = $('#consoleBar'), conBody = $('#consoleBody'),
-        conInput = $('#consoleInput'), conHint = $('#consoleHint');
+        conInput = $('#consoleInput'), conHint = $('#consoleHint'), conInputRow = $('.inputrow', con);
   const esc = (s) => s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
   function out(html, cls) {
     const d = document.createElement('div');
@@ -105,6 +111,7 @@
   function setMin(min) {
     con.classList.toggle('min', min);
     conBar.setAttribute('aria-expanded', String(!min));
+    conBody.inert = min; conInputRow.inert = min; // off-screen when minimized: leave the tab order
     conHint.textContent = min ? 'click to open · type help' : 'esc to close';
     if (!min) setTimeout(() => conInput.focus(), 300);
   }
@@ -112,6 +119,7 @@
   conBar.setAttribute('tabindex', '0');
   conBar.setAttribute('aria-controls', 'consoleBody');
   conBar.setAttribute('aria-expanded', 'false');
+  conBody.inert = true; conInputRow.inert = true; // starts minimized
   conBar.addEventListener('click', () => setMin(!con.classList.contains('min')));
   conBar.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setMin(!con.classList.contains('min')); } });
 
