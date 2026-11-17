@@ -1,298 +1,269 @@
-/* ============================================================
-   Hao Lin — "Schematic" · interactions (vanilla)
-   ============================================================ */
+/* Hao Lin · site interactions (vanilla, no deps) */
 (function () {
   'use strict';
   const $ = (s, r) => (r || document).querySelector(s);
   const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const pad3 = (n) => String(Math.max(0, Math.round(n))).padStart(3, '0');
+  document.documentElement.classList.add('js');
 
-  /* ---------- CAD readout (scroll depth) ---------- */
-  const ry = $('#ry');
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* ignore */ } },
+  };
 
-  /* ---------- scroll % + active sheet ---------- */
-  const rscroll = $('#rscroll'), sheetLabel = $('#sheetLabel');
-  const sections = $$('section[data-sheet]');
-  let rafScroll = 0;
-  function onScroll() {
-    rafScroll = 0;
-    const y = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
-    const max = document.documentElement.scrollHeight - window.innerHeight;
-    const pct = max > 0 ? (y / max) * 100 : 0;
-    if (rscroll) rscroll.textContent = pad3(pct).slice(1) + '%';
-    if (ry) ry.textContent = String(Math.round(y)).padStart(4, '0');
-    // active section = the last one whose top has passed 45% of viewport
-    let active = sections[0];
-    const probe = window.innerHeight * 0.45;
-    for (const s of sections) { if (s.getBoundingClientRect().top <= probe) active = s; }
-    if (active && sheetLabel) sheetLabel.textContent = 'SHEET ' + active.getAttribute('data-sheet');
+  /* ---------- text blips (off by default) ---------- */
+  let soundOn = store.get('sound') === 'on';
+  let actx = null;
+  const soundBtn = $('#sound');
+  function paintSound() {
+    soundBtn.textContent = 'SOUND: ' + (soundOn ? 'ON' : 'OFF');
+    soundBtn.setAttribute('aria-pressed', String(soundOn));
   }
-  window.addEventListener('scroll', () => { if (!rafScroll) rafScroll = requestAnimationFrame(onScroll); }, { passive: true });
-  window.addEventListener('resize', onScroll);
-  onScroll();
+  paintSound();
+  soundBtn.addEventListener('click', () => {
+    soundOn = !soundOn; store.set('sound', soundOn ? 'on' : 'off'); paintSound();
+    if (soundOn) blip(520, 0.06);
+  });
+  function blip(freq, len) {
+    if (!soundOn) return;
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = 'square'; o.frequency.value = freq || 440 + Math.random() * 60;
+      g.gain.setValueAtTime(0.04, actx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + (len || 0.04));
+      o.connect(g).connect(actx.destination);
+      o.start(); o.stop(actx.currentTime + (len || 0.04));
+    } catch (e) { /* no audio, no problem */ }
+  }
 
-  /* ---------- reveals (transform-only) ---------- */
-  const rv = $$('.rv');
-  if (!reduce && 'IntersectionObserver' in window) {
-    rv.forEach((e) => e.classList.add('pending'));
-    const io = new IntersectionObserver((ents) => {
-      ents.forEach((en) => { if (en.isIntersecting) { en.target.classList.remove('pending'); io.unobserve(en.target); } });
-    }, { threshold: 0.1, rootMargin: '0px 0px -6% 0px' });
-    rv.forEach((e) => io.observe(e));
-    // above-the-fold now; safety net later
-    requestAnimationFrame(() => {
-      const vh = innerHeight;
-      rv.forEach((e) => { if (e.getBoundingClientRect().top < vh * 0.95) { e.classList.remove('pending'); io.unobserve(e); } });
+  /* ---------- dialogue boxes ---------- */
+  // Each .talk box shows one <p> at a time, typed out. Full text stays in the DOM for screen readers.
+  function Talk(box, opts) {
+    const lines = $$('p', box);
+    const more = document.createElement('span');
+    more.className = 'more'; more.setAttribute('aria-hidden', 'true'); more.textContent = '▼';
+    let i = -1, timer = 0, typing = false, full = '';
+
+    function show(n) {
+      clearInterval(timer);
+      lines.forEach((p) => {
+        p.classList.remove('on');
+        if (p.dataset.full) p.textContent = p.dataset.full;
+      });
+      i = n;
+      const p = lines[i];
+      p.dataset.full = p.dataset.full || p.textContent;
+      full = p.dataset.full;
+      p.classList.add('on');
+      more.remove();
+      if (reduce) { done(); return; }
+      let k = 0;
+      typing = true;
+      p.textContent = '';
+      timer = setInterval(() => {
+        k++;
+        p.textContent = full.slice(0, k);
+        const ch = full[k - 1];
+        if (k % 2 === 0 && ch && ch !== ' ') blip();
+        if (k >= full.length) done();
+      }, 28);
+    }
+    function done() {
+      clearInterval(timer); typing = false;
+      lines[i].textContent = full;
+      if (i < lines.length - 1 && opts && opts.interactive) box.appendChild(more);
+    }
+    function next() {
+      if (typing) { done(); return; }
+      if (i < lines.length - 1) show(i + 1);
+    }
+    if (opts && opts.interactive) {
+      box.addEventListener('click', next);
+      // Z / Enter advance when nothing else has focus (like a game)
+      document.addEventListener('keydown', (e) => {
+        const idle = document.activeElement === document.body || !document.activeElement;
+        if (idle && (e.key === 'Enter' || e.key === 'z' || e.key === 'Z')) { e.preventDefault(); next(); }
+      });
+    }
+    return { start: () => show(0), next, say(text) { lines.forEach((p, n) => n && p.remove()); lines.length = 1; lines[0].dataset.full = text; lines[0].textContent = text; show(0); } };
+  }
+
+  const intro = Talk($('#intro-talk'), { interactive: true });
+  intro.start();
+
+  /* ---------- menu tabs ---------- */
+  const tabs = $$('.menu .opt');
+  const panels = $$('.panel');
+  const panelTalks = new Map(panels.map((p) => [p.id, Talk($('.talk', p))]));
+
+  function select(id, opts) {
+    if (!panels.some((p) => p.id === id)) id = 'work';
+    tabs.forEach((t) => {
+      const on = t.dataset.panel === id;
+      t.setAttribute('aria-selected', String(on));
+      t.tabIndex = on ? 0 : -1;
     });
-    setTimeout(() => rv.forEach((e) => e.classList.remove('pending')), 1800);
+    panels.forEach((p) => p.classList.toggle('on', p.id === id));
+    panelTalks.get(id).start();
+    if (opts && opts.user) {
+      history.replaceState(null, '', '#' + id);
+      blip(660, 0.05);
+      const panel = $('#' + id);
+      if (panel.getBoundingClientRect().top > window.innerHeight * 0.7) panel.scrollIntoView({ block: 'start' });
+    }
   }
-
-  /* ---------- project rows expand/collapse (keyboard + SR accessible) ---------- */
-  $$('.part').forEach((part, idx) => {
-    const row = $('.row', part), detail = $('.detail', part), inner = $('.inner', part);
-    const did = 'part-detail-' + (idx + 1);
-    detail.id = did;
-    detail.inert = true; // collapsed: out of the tab order until opened
-    row.setAttribute('role', 'button');
-    row.setAttribute('tabindex', '0');
-    row.setAttribute('aria-controls', did);
-    row.setAttribute('aria-expanded', 'false');
-    function toggle() {
-      const open = part.classList.toggle('open');
-      row.setAttribute('aria-expanded', open ? 'true' : 'false');
-      detail.inert = !open;
-      if (open) {
-        $$('.part.open').forEach((p) => {
-          if (p !== part) {
-            p.classList.remove('open');
-            const d = $('.detail', p); d.style.height = '0px'; d.inert = true;
-            $('.row', p).setAttribute('aria-expanded', 'false');
-          }
-        });
-        detail.style.height = inner.offsetHeight + 'px';
-      } else {
-        detail.style.height = '0px';
+  tabs.forEach((t, n) => {
+    t.addEventListener('click', (e) => { e.preventDefault(); select(t.dataset.panel, { user: true }); });
+    t.addEventListener('keydown', (e) => {
+      const dir = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+      if (dir) {
+        e.preventDefault();
+        const nt = tabs[(n + dir + tabs.length) % tabs.length];
+        nt.focus(); blip(440, 0.03);
+      } else if (e.key === 'z' || e.key === 'Z') {
+        e.preventDefault(); select(t.dataset.panel, { user: true });
       }
-    }
-    row.addEventListener('click', toggle);
-    row.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
-  });
-  window.addEventListener('resize', () => {
-    const open = $('.part.open');
-    if (open) $('.detail', open).style.height = $('.inner', open).offsetHeight + 'px';
-  });
-
-  /* ---------- smooth nav + cv print ---------- */
-  $$('[data-goto]').forEach((a) => {
-    a.addEventListener('click', (e) => {
-      const id = a.getAttribute('data-goto');
-      const t = document.getElementById(id);
-      if (t) { e.preventDefault(); t.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' }); }
     });
   });
-  const cvDl = $('#cvDownload');
-  if (cvDl) cvDl.addEventListener('click', (e) => { e.preventDefault(); window.print(); });
+  select((location.hash || '#work').slice(1));
 
-  /* ============================================================
-     CONSOLE
-     ============================================================ */
-  const con = $('#console'), conBar = $('#consoleBar'), conBody = $('#consoleBody'),
-        conInput = $('#consoleInput'), conHint = $('#consoleHint'), conInputRow = $('.inputrow', con);
-  const esc = (s) => s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-  function out(html, cls) {
-    const d = document.createElement('div');
-    d.className = 'line' + (cls ? ' ' + cls : '');
-    d.innerHTML = html;
-    conBody.appendChild(d);
-    conBody.scrollTop = conBody.scrollHeight;
-    return d;
-  }
-  function setMin(min) {
-    con.classList.toggle('min', min);
-    conBar.setAttribute('aria-expanded', String(!min));
-    conBody.inert = min; conInputRow.inert = min; // off-screen when minimized: leave the tab order
-    conHint.textContent = min ? 'click to open · type help' : 'esc to close';
-    if (!min) setTimeout(() => conInput.focus(), 300);
-  }
-  conBar.setAttribute('role', 'button');
-  conBar.setAttribute('tabindex', '0');
-  conBar.setAttribute('aria-controls', 'consoleBody');
-  conBar.setAttribute('aria-expanded', 'false');
-  conBody.inert = true; conInputRow.inert = true; // starts minimized
-  conBar.addEventListener('click', () => setMin(!con.classList.contains('min')));
-  conBar.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setMin(!con.classList.contains('min')); } });
-
-  const SECTIONS = { a1: 'projects', a2: 'resume', a3: 'about', a4: 'contact',
-    projects: 'projects', resume: 'resume', about: 'about', contact: 'contact', cover: 'cover', top: 'cover' };
-  const PROJECTS = [
-    ['P-01', 'Latticework', '2025', 'real-time collaborative graph editor · CRDT · WebGL'],
-    ['P-02', 'Halfstep', '2024', 'ear-training app that listens · Web Audio · DSP'],
-    ['P-03', 'Drift', '2024', 'self-hosted read-later · Go · SQLite'],
-    ['P-04', 'Plumb', '2023', 'monorepo dependency-graph visualizer · D3 · CLI'],
-  ];
-
-  /* ---------- hidden ASCII art ---------- */
-  const ART = {
-    cat: " /\\_/\\\n( o.o )\n > ^ <   meow.",
-    coffee: "    ( (\n     ) )\n  ........\n  |      |]\n  \\      /\n   `----'   refuel.",
-    rocket: "    /\\\n   /  \\\n  | HL |\n  |    |\n /|_##_|\\\n/  |  |  \\\n   /__\\\n  ship it.",
-    v: "\\            /\n \\          /\n  \\        /\n   \\      /\n    \\    /\n     \\  /\n      \\/   understanding.",
-    skull: "   ______\n  /      \\\n |  X  X  |\n |   ||   |\n  \\ ---- /\n   |||||| ",
-    hi: "  _   _ _\n | | | (_)\n | |_| | |\n |  _  | |\n |_| |_|_|  hey.",
-  };
-  function printArt(arg) {
-    const keys = Object.keys(ART);
-    let key = (arg || '').toLowerCase().trim();
-    if (!key) key = keys[(Math.random() * keys.length) | 0];
-    if (!ART[key]) { out('<span class="dim">no art for that. try:</span> <span class="ok">art ' + keys.join('</span> · <span class="ok">art ') + '</span>'); return; }
-    const d = out('', 'ok');
-    d.style.whiteSpace = 'pre';
-    d.style.lineHeight = '1.15';
-    d.textContent = ART[key];
-  }
-
-  const commands = {
-    help() {
-      out('<span class="dim">commands</span>');
-      out('  <span class="ok">whoami</span>     who is this');
-      out('  <span class="ok">projects</span>   list selected work');
-      out('  <span class="ok">resume</span>     experience summary');
-      out('  <span class="ok">about</span>      the short version');
-      out('  <span class="ok">contact</span>    how to reach me');
-      out('  <span class="ok">goto</span> &lt;a1-a4&gt; jump to a sheet');
-      out('  <span class="ok">ls</span>         list sheets');
-      out('  <span class="ok">cv</span>         print / save the resume');
-      out('  <span class="ok">bg</span> &lt;style&gt;  backdrop: contour · dots · grid');
-      out('  <span class="ok">clear</span>      wipe the console');
-      out('  <span class="ok">play</span>       ▦ boot the hidden game');
-    },
-    whoami() {
-      out('<span class="wt">hao lin</span> · founder @ <span class="ok">tolus.dev</span>, isef researcher.');
-      out('<span class="dim">toronto. builds real-time systems, dev tools, and tolus.</span>');
-    },
-    projects() { PROJECTS.forEach((p) => out('<span class="dim">' + p[0] + '</span>  <span class="ok">' + p[1] + '</span> <span class="dim">(' + p[2] + ')</span>  ' + p[3])); },
-    resume() {
-      out('<span class="ok">2024–now</span>  Founder · Tolus');
-      out('<span class="ok">2023–24 </span>  Software Engineer · Example Labs');
-      out('<span class="ok">2022–23 </span>  Research Assistant · ISEF');
-      out('<span class="dim">type</span> <span class="ok">cv</span> <span class="dim">to save the full pdf.</span>');
-    },
-    about() { out('developer at the seam where engineering meets craft. likes the whole stack, db query to animation curve. learns by building, then rebuilding.'); },
-    contact() { out('email <span class="ok">hao@tolus.dev</span> · github <span class="ok">github.com/jappabl</span>'); },
-    ls() { out('cover/  <span class="ok">projects/</span>  resume/  about/  contact/  <span class="dim">.assembly/</span>'); },
-    cv() { out('<span class="dim">opening print dialog…</span>'); setTimeout(() => window.print(), 350); },
-    clear() { conBody.innerHTML = ''; },
-    goto(arg) {
-      const key = (arg || '').toLowerCase().replace('#', '');
-      const id = SECTIONS[key];
-      if (!id) { out('<span class="dim">unknown sheet:</span> ' + esc(arg || '') + ' <span class="dim">— try</span> <span class="ok">ls</span>'); return; }
-      out('<span class="dim">→ navigating to</span> <span class="ok">' + id + '</span>');
-      document.getElementById(id).scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
-    },
-    play() { startGame(); },
-    art(arg) { printArt(arg); },
-    bg(arg) {
-      const m = (arg || '').toLowerCase().trim();
-      if (window.setBackground && window.setBackground(m)) out('<span class="dim">backdrop →</span> <span class="ok">' + m + '</span>');
-      else out('<span class="dim">usage:</span> <span class="ok">bg contour</span> · <span class="ok">bg dots</span> · <span class="ok">bg grid</span>');
-    },
-    sudo() { out('<span class="dim">permission denied. this is a portfolio, not a kernel.</span>'); },
-    assembly() { toggleAssembly(true); out('<span class="ok">assembly mode engaged.</span> <span class="dim">(or press ↑↑↓↓←→←→ b a)</span>'); },
-  };
-  function run(raw) {
-    const cmd = raw.trim();
-    out('<span class="pr">›</span> <span class="wt">' + esc(cmd) + '</span>');
-    if (!cmd) return;
-    const [name, ...rest] = cmd.split(/\s+/);
-    const fn = commands[name.toLowerCase()];
-    if (fn) fn(rest.join(' '));
-    else out('<span class="dim">command not found:</span> ' + esc(name) + ' <span class="dim">— try</span> <span class="ok">help</span>');
-  }
-  const history = []; let hi = -1;
-  conInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { const v = conInput.value; if (v.trim()) { history.push(v); hi = history.length; } run(v); conInput.value = ''; }
-    else if (e.key === 'ArrowUp') { if (hi > 0) { hi--; conInput.value = history[hi] || ''; e.preventDefault(); } }
-    else if (e.key === 'ArrowDown') { if (hi < history.length - 1) { hi++; conInput.value = history[hi] || ''; } else { hi = history.length; conInput.value = ''; } }
-    else if (e.key === 'Escape') { setMin(true); }
+  /* ---------- inventory (work panel) ---------- */
+  const inv = $('#inv');
+  const items = $$('.item', inv);
+  const list = document.createElement('div');
+  list.className = 'list';
+  list.setAttribute('aria-label', 'Projects');
+  const btns = items.map((it, n) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = it.dataset.name;
+    b.addEventListener('click', () => pick(n, true));
+    b.addEventListener('keydown', (e) => {
+      const dir = { ArrowDown: 1, ArrowUp: -1 }[e.key];
+      if (dir) { e.preventDefault(); const m = (n + dir + btns.length) % btns.length; btns[m].focus(); pick(m, true); }
+    });
+    list.appendChild(b);
+    return b;
   });
-
-  /* ============================================================
-     EASTER EGG — konami → assembly mode
-     ============================================================ */
-  const KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
-  let kbuf = [];
-  let assemblyOn = false;
-  const stamp = $('#stamp');
-  function toggleAssembly(force) {
-    assemblyOn = force === undefined ? !assemblyOn : force;
-    document.body.classList.toggle('assembly', assemblyOn);
-    if (assemblyOn) {
-      sections.forEach((s, i) => { s.style.transform = reduce ? 'none' : 'translateX(' + ((i % 2 ? 1 : -1) * 10) + 'px)'; });
-      stamp.textContent = 'Assembly mode';
-      stamp.classList.add('show');
-      setTimeout(() => stamp.classList.remove('show'), 1600);
-    } else {
-      sections.forEach((s) => { s.style.transform = ''; });
-    }
+  inv.prepend(list);
+  inv.classList.add('ready');
+  items.forEach((it) => it.setAttribute('aria-live', 'polite'));
+  function pick(n, user) {
+    btns.forEach((b, m) => b.setAttribute('aria-pressed', String(m === n)));
+    items.forEach((it, m) => it.classList.toggle('on', m === n));
+    if (user) blip(560, 0.04);
   }
-  window.addEventListener('keydown', (e) => {
-    if (document.activeElement === conInput) return;
-    kbuf.push(e.key); kbuf = kbuf.slice(-KONAMI.length);
-    if (KONAMI.every((k, i) => (kbuf[i] || '').toLowerCase() === k.toLowerCase())) { toggleAssembly(); kbuf = []; }
-  });
+  pick(0);
 
-  /* ============================================================
-     HIDDEN GAME — minimal mono "snake" in the console
-     ============================================================ */
+  /* ---------- minigame: dodge the syntax ---------- */
+  const dlg = $('#fight');
+  const cv = $('#arena');
+  const ctx = cv.getContext('2d');
+  const talk = Talk($('#fightTalk'));
+  const hpEl = $('#hp'), clockEl = $('#clock');
+  const startBtn = $('#fightStart'), closeBtn = $('#fightClose');
+  const W = cv.width, H = cv.height, LEN = 20;
+  const GLYPHS = [';', '{', '}', '<', '/>', '!', 'NaN', '()', '[]', '=>'];
   let game = null;
-  function startGame() {
-    if (!con.classList.contains('min')) {} else setMin(false);
-    if (game) { out('<span class="dim">game already running. arrow keys to steer.</span>'); return; }
-    out('<span class="ok">▦ snake</span> <span class="dim">— arrow keys / wasd · eat the red cell · esc to quit</span>');
-    const cv = document.createElement('canvas');
-    const N = 16, S = 13; cv.width = N * S; cv.height = N * S;
-    conBody.appendChild(cv); conBody.scrollTop = conBody.scrollHeight;
-    const ctx = cv.getContext('2d');
-    let snake = [{ x: 7, y: 8 }], dir = { x: 1, y: 0 }, next = { x: 1, y: 0 },
-        food = { x: 11, y: 8 }, score = 0, dead = false;
-    function place() { food = { x: (Math.random() * N) | 0, y: (Math.random() * N) | 0 }; }
-    function draw() {
-      ctx.fillStyle = '#050507'; ctx.fillRect(0, 0, cv.width, cv.height);
-      ctx.fillStyle = '#1c1c22';
-      for (let i = 0; i <= N; i++) { ctx.fillRect(i * S, 0, 1, cv.height); ctx.fillRect(0, i * S, cv.width, 1); }
-      ctx.fillStyle = '#e5372a'; ctx.fillRect(food.x * S + 2, food.y * S + 2, S - 4, S - 4);
-      ctx.fillStyle = '#e7e7ea';
-      snake.forEach((p, i) => { ctx.fillStyle = i === 0 ? '#fff' : '#9c9ca6'; ctx.fillRect(p.x * S + 1, p.y * S + 1, S - 2, S - 2); });
-    }
-    function step() {
-      if (dead) return;
-      dir = next;
-      const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
-      if (head.x < 0 || head.y < 0 || head.x >= N || head.y >= N || snake.some((p) => p.x === head.x && p.y === head.y)) {
-        dead = true; clearInterval(game.timer); game = null;
-        out('<span class="dim">game over · score</span> <span class="ok">' + score + '</span><span class="dim">. type</span> <span class="ok">play</span> <span class="dim">to retry.</span>');
-        cv.style.opacity = .4; window.removeEventListener('keydown', key); return;
-      }
-      snake.unshift(head);
-      if (head.x === food.x && head.y === food.y) { score++; place(); } else snake.pop();
-      draw();
-    }
-    function key(e) {
-      const k = e.key.toLowerCase();
-      const map = { arrowup: [0,-1], w: [0,-1], arrowdown: [0,1], s: [0,1], arrowleft: [-1,0], a: [-1,0], arrowright: [1,0], d: [1,0] };
-      if (k === 'escape') { dead = true; clearInterval(game.timer); game = null; cv.remove(); window.removeEventListener('keydown', key); out('<span class="dim">quit.</span>'); return; }
-      if (map[k]) { const [x, y] = map[k]; if (x !== -dir.x || y !== -dir.y) next = { x, y }; e.preventDefault(); }
-    }
-    window.addEventListener('keydown', key);
+
+  $('#bugBtn').addEventListener('click', () => {
+    if (typeof dlg.showModal !== 'function') return;
+    dlg.showModal();
+    reset();
+    talk.say('* a bug blocks the way. it smells like a missing semicolon.');
+    startBtn.focus();
+  });
+  closeBtn.addEventListener('click', () => { stop(); dlg.close(); });
+  dlg.addEventListener('close', stop);
+  startBtn.addEventListener('click', () => { start(); cv.focus(); });
+
+  function reset() {
+    stop();
+    game = { x: W / 2, y: H / 2, hp: 5, t0: 0, last: 0, shots: [], spawn: 0, keys: {}, inv: 0, over: true };
+    hpEl.textContent = '5'; clockEl.textContent = String(LEN);
     draw();
-    game = { timer: setInterval(step, 120) };
+  }
+  function start() {
+    reset();
+    game.over = false;
+    game.t0 = game.last = performance.now();
+    startBtn.textContent = 'DODGE';
+    talk.say('* dodge the syntax. arrow keys or WASD. drag on touch.');
+    game.raf = requestAnimationFrame(tick);
+  }
+  function stop() { if (game && game.raf) cancelAnimationFrame(game.raf); if (game) game.over = true; }
+  function end(won) {
+    stop();
+    startBtn.textContent = 'AGAIN';
+    talk.say(won ? '* you survived. the bug gives up and files itself as a feature.' : '* you got hit by one too many semicolons.');
+    blip(won ? 880 : 180, 0.25);
+    startBtn.focus();
   }
 
-  // open console on first scroll to hint at it (once)
-  let hinted = false;
-  window.addEventListener('scroll', () => {
-    if (hinted) return; hinted = true;
-    conHint.textContent = 'click to open · type help';
-  }, { passive: true, once: true });
+  function tick(now) {
+    const g = game;
+    const dt = Math.min(0.05, (now - g.last) / 1000); g.last = now;
+    const left = LEN - (now - g.t0) / 1000;
+    clockEl.textContent = String(Math.max(0, Math.ceil(left)));
+    if (left <= 0) { draw(); end(true); return; }
+
+    const sp = 140;
+    const k = g.keys;
+    g.x += ((k.ArrowRight || k.d ? 1 : 0) - (k.ArrowLeft || k.a ? 1 : 0)) * sp * dt;
+    g.y += ((k.ArrowDown || k.s ? 1 : 0) - (k.ArrowUp || k.w ? 1 : 0)) * sp * dt;
+    g.x = Math.max(6, Math.min(W - 6, g.x)); g.y = Math.max(6, Math.min(H - 6, g.y));
+
+    const level = 1 - left / LEN; // 0 → 1
+    g.spawn -= dt;
+    if (g.spawn <= 0) {
+      g.spawn = 0.55 - level * 0.35;
+      const side = Math.random();
+      const txt = GLYPHS[(Math.random() * GLYPHS.length) | 0];
+      const v = 70 + level * 90 + Math.random() * 40;
+      if (side < 0.6) g.shots.push({ x: 10 + Math.random() * (W - 20), y: -10, vx: 0, vy: v, txt });
+      else if (side < 0.8) g.shots.push({ x: -20, y: 10 + Math.random() * (H - 20), vx: v, vy: 0, txt });
+      else g.shots.push({ x: W + 20, y: 10 + Math.random() * (H - 20), vx: -v, vy: 0, txt });
+    }
+    g.inv = Math.max(0, g.inv - dt);
+    for (const s of g.shots) {
+      s.x += s.vx * dt; s.y += s.vy * dt;
+      const hw = 5 + s.txt.length * 4;
+      if (!g.inv && Math.abs(s.x - g.x) < hw && Math.abs(s.y - g.y) < 10) {
+        g.hp--; g.inv = 1; hpEl.textContent = String(g.hp); blip(160, 0.12);
+        if (g.hp <= 0) { draw(); end(false); return; }
+      }
+    }
+    g.shots = g.shots.filter((s) => s.x > -40 && s.x < W + 40 && s.y < H + 30);
+    draw();
+    g.raf = requestAnimationFrame(tick);
+  }
+
+  function draw() {
+    const g = game;
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+    ctx.font = '20px VT323, monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#fff';
+    for (const s of g.shots) ctx.fillText(s.txt, s.x, s.y);
+    if (g.inv && ((g.inv * 10) | 0) % 2) return; // flicker after a hit
+    ctx.fillStyle = g.inv ? '#ff5a4f' : '#ffe14d';
+    ctx.fillRect((g.x - 5) | 0, (g.y - 5) | 0, 10, 10);
+  }
+
+  const KEYS = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd'];
+  dlg.addEventListener('keydown', (e) => {
+    const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if (KEYS.includes(key) && game && !game.over) { e.preventDefault(); game.keys[key] = true; }
+  });
+  dlg.addEventListener('keyup', (e) => {
+    const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if (game) game.keys[key] = false;
+  });
+  // touch / mouse drag: player follows the pointer
+  cv.tabIndex = 0;
+  cv.addEventListener('pointermove', (e) => {
+    if (!game || game.over || (e.pointerType === 'mouse' && !e.buttons)) return;
+    const r = cv.getBoundingClientRect();
+    game.x = ((e.clientX - r.left) / r.width) * W;
+    game.y = ((e.clientY - r.top) / r.height) * H;
+  });
 })();
